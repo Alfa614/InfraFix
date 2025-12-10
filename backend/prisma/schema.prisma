@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String   
+  email     String   @unique
+  password  String
+  role      String   @default("USER") // USER | ADMIN | CONTRACTOR
+
+  reports   Report[]
+  comments  Comment[]
+  upvotes   Upvote[]
+  bids      Bid[]     // contractor’s bids
+}
+
+model Report {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  category    String
+  latitude    Float?
+  longitude   Float?
+  address     String?
+  status      String    @default("OPEN") 
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  severity    String?   
+  urgency     String? 
+  processedImage String?  
+
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+
+  images      Image[]
+  comments    Comment[]
+  upvotes     Upvote[]
+  bids        Bid[]     // contractor bids
+}
+
+model Image {
+  id       Int    @id @default(autoincrement())
+  url      String
+  reportId Int
+  report   Report @relation(fields: [reportId], references: [id])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  reportId  Int
+  report    Report   @relation(fields: [reportId], references: [id])
+}
+
+model Upvote {
+  id        Int      @id @default(autoincrement())
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  reportId  Int
+  report    Report   @relation(fields: [reportId], references: [id])
+
+  @@unique([userId, reportId])
+}
+
+model Bid {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  description String
+  createdAt   DateTime @default(now())
+
+  aiEvaluation String?
+
+  contractorId Int
+  contractor   User    @relation(fields: [contractorId], references: [id])
+
+  reportId    Int
+  report      Report   @relation(fields: [reportId], references: [id])
+}
